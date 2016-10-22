@@ -4,21 +4,42 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-use App\Models\Items;
+use App\Http\Requests\RequestRule;
+use App\User;
+use App\Models\Requests as Req;
+use App\Http\Controllers\ItemController;
+use Carbon\Carbon;
 
-class ItemController extends Controller
+class RequestController extends Controller
 {
+    protected $item;
+
+    /**
+     * Instantiate a new controller instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        $this->item = app(ItemController::class);
+    }
+
     public function find($id)
     {
         try {
-            $item = Items::find($id);
+            $req = Req::find($id);
         } catch (Exception $e) {
             return response()->json([
                 'errors'    => $e->getMessage()
             ], 400);
         }
 
-        return $item;
+        if ($req) {
+            $req->user;
+            $req->item;
+        }
+        
+        return $req;
     }
 
     /**
@@ -30,20 +51,17 @@ class ItemController extends Controller
     {
         $page = request()->get('page') == 'all' ? 'all' : 
             (request()->get('page') > 1 ? request()->get('page') - 1 : 0);
+        
+        $status = request()->get('status') ? request()->get('status') : 'pending';
 
         try {
-            $items = Items::where('is_trash', false)
+            $reqs = Req::where('status', $status)
                             ->orderBy('id', 'desc')
                             ->when($page !== 'all', function ($query) use ($page) {
                                 return $query->skip($page * 10)
                                             ->take(10);
                             })
                             ->get();
-            
-            foreach ($items as $key => $val) {
-                $items[$key]['created_date'] = $val['created_at']->format('d M Y H:i');
-            }
-
         } catch (Exception $e) {
             return response()->json([
                 'errors'    => $e->getMessage()
@@ -51,8 +69,8 @@ class ItemController extends Controller
         }
 
         return response()->json([
-            'items' => $items,
-            'count' => count($items)
+            'items' => $reqs,
+            'count' => count($reqs)
         ]);
     }
 
@@ -72,17 +90,23 @@ class ItemController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(RequestRule $request)
     {
-        if (!request()->has('name')) {
+        $user = User::find($request->get('user_id'));
+        $item = $this->item->find($request->get('item_id'));
+
+        if (!$item || !$user) {
             return response()->json([
-                'errors'    => 'Nama harus diisi!'
+                'errors'    => 'Data tidak ditemukan!'
             ], 400);
         }
 
-        $item = new Items;
-        $item->name = request()->get('name');
-        $item->save();
+        $req = new Req;
+        $req->user_id = $request->get('user_id');
+        $req->item_id = $request->get('item_id');
+        $req->status = 'pending';
+        $req->created_at = Carbon::now('Asia/Jakarta');
+        $req->save();
 
         return response()->json([
             'message'    => 'Data berhasil dimasukkan.'
@@ -97,11 +121,10 @@ class ItemController extends Controller
      */
     public function show($id)
     {
-        $item = $this->find($id);
+        $req = $this->find($id);
 
-        if ($item) {
-            $item['created_date'] = $item['created_at']->format('d M Y H:i');
-            return response()->json($item);
+        if ($req) {
+            return response()->json($req);
         } else {
             return response()->json([
                 'errors'    => 'Tidak dapat menemukan data.'
@@ -129,17 +152,25 @@ class ItemController extends Controller
      */
     public function update(Request $request, $id)
     {
-        if (!request()->has('name')) {
+        if (!request()->has('status')) {
             return response()->json([
-                'errors'    => 'Nama harus diisi!'
+                'errors'    => 'Status harus diisi!'
             ], 400);
         }
 
-        $item = $this->find($id);
+        $req = $this->find($id);
 
-        if ($item) {
-            $item->name = request()->get('name');
-            $item->save();
+        if ($req) {
+            $req->status = request()->get('status');
+
+            if (request()->get('status') == 'approved') {
+                $req->approved_at = Carbon::now('Asia/Jakarta');
+            } else {
+                $req->rejected_at = new Carbon('Asia/Jakarta');
+                $req->reject_note = request()->get('reject_note') ? request()->get('reject_note') : '';
+            }
+
+            $req->save();
 
             return response()->json([
                 'message'    => 'Data berhasil diupdate.'
@@ -159,19 +190,6 @@ class ItemController extends Controller
      */
     public function destroy($id)
     {
-        $item = $this->find($id);
-
-        if ($item) {
-            $item->is_trash = true;
-            $item->save();
-
-            return response()->json([
-                'message'    => 'Data berhasil dihapus.'
-            ]);
-        } else {
-            return response()->json([
-                'errors'    => 'Tidak dapat menemukan data.'
-            ]);
-        }
+        //
     }
 }

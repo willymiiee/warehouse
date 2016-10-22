@@ -20,9 +20,7 @@ class Requests extends Migration
             $table->string('status');
             $table->dateTime('created_at');
             $table->dateTime('approved_at')->nullable();
-            $table->integer('approved_by')->nullable();
             $table->dateTime('rejected_at')->nullable();
-            $table->integer('rejected_by')->nullable();
             $table->string('reject_note')->nullable();
         });
     }

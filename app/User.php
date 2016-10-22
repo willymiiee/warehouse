@@ -26,4 +26,12 @@ class User extends Authenticatable
     protected $hidden = [
         'password', 'remember_token',
     ];
+
+    /**
+     * Get the requests.
+     */
+    public function requests()
+    {
+        return $this->hasMany('App\Models\Requests');
+    }
 }

@@ -14,4 +14,12 @@ class Items extends Model
     protected $fillable = [
         'name', 'is_trash'
     ];
+
+    /**
+     * Get the requests.
+     */
+    public function requests()
+    {
+        return $this->hasMany('App\Models\Requests');
+    }
 }

@@ -17,4 +17,22 @@ class Requests extends Model
         'status',
         'reject_note'
     ];
+
+    public $timestamps = false;
+
+    /**
+     * Get the user.
+     */
+    public function user()
+    {
+        return $this->belongsTo('App\User');
+    }
+
+    /**
+     * Get the item.
+     */
+    public function item()
+    {
+        return $this->belongsTo('App\Models\Items');
+    }
 }

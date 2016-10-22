@@ -14,3 +14,4 @@ use Illuminate\Http\Request;
 */
 
 Route::resource('items', 'ItemController');
+Route::resource('requests', 'RequestController');
