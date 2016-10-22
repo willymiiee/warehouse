@@ -16,6 +16,7 @@ class Items extends Migration
         Schema::create('items', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name');
+            $table->boolean('is_trash')->default(false);
             $table->timestamps();
         });
     }
