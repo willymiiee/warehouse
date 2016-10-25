@@ -33,7 +33,7 @@ class ItemController extends Controller
 
         try {
             $items = Items::where('is_trash', false)
-                            ->orderBy('id', 'desc')
+                            ->orderBy('id', 'asc')
                             ->when($page !== 'all', function ($query) use ($page) {
                                 return $query->skip($page * 10)
                                             ->take(10);

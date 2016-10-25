@@ -25,4 +25,14 @@ class HomeController extends Controller
     {
         return view('home');
     }
+
+    public function create()
+    {
+        return view('form');
+    }
+
+    public function show($id)
+    {
+        return view('detail', ['id' => $id]);
+    }
 }
